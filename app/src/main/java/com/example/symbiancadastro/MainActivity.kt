@@ -51,21 +51,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.example.symbiancadastro.services.RetrofitFactory
+import com.example.symbiancadastro.services.UsuarioService
 import com.example.symbiancadastro.ui.theme.SymbianCadastroTheme
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.gson.JsonObject
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             SymbianCadastroTheme {
-                // Create a mutable state to hold the URI
+
                 val fotoUri = remember { mutableStateOf<Uri?>(null) }
 
-                // Call the login function with the fotoUri parameter
-                login(fotoUri = fotoUri)
+                login(fotoUri = fotoUri, lifecycleScope)
             }
         }
     }
@@ -74,7 +79,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 //@Preview(showSystemUi = true)
 @Composable
-fun login(fotoUri: MutableState<Uri?>) {
+fun login(fotoUri: MutableState<Uri?>, lifecycleCoroutineScope: LifecycleCoroutineScope) {
 
 
     var emailState = rememberSaveable {
@@ -93,12 +98,13 @@ fun login(fotoUri: MutableState<Uri?>) {
         fotoUri.value = it
     }
 
-
     var painter = rememberAsyncImagePainter(
         ImageRequest.Builder(LocalContext.current)
             .data(fotoUri.value)
             .build()
     )
+
+
 
 
     Surface(
@@ -169,28 +175,7 @@ fun login(fotoUri: MutableState<Uri?>) {
 
 
                 Spacer(modifier = Modifier.height(23.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Button(
-                        onClick = {
-                            uploadImage(fotoUri.value!!, contexto )
-                        },
-                        colors = ButtonDefaults.buttonColors(Color(150, 6, 240)),
-                        modifier = Modifier
-                            .width(180.dp)
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp, 12.dp, 12.dp, 12.dp)
-                    ) {
-                        Text(
-                            text = "Enviar imagem",
-                            color = Color(255, 255, 255),
-                            fontWeight = FontWeight(800)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(23.dp))
+
                 OutlinedTextField(
                     value = "", onValueChange = {
                         emailState.value = it
@@ -218,7 +203,9 @@ fun login(fotoUri: MutableState<Uri?>) {
                     horizontalArrangement = Arrangement.End
                 ) {
                     Button(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            uploadImage(fotoUri.value!!, contexto , lifecycleCoroutineScope)
+                        },
                         colors = ButtonDefaults.buttonColors(Color(150, 6, 240)),
                         modifier = Modifier
                             .width(120.dp)
@@ -257,7 +244,7 @@ fun login(fotoUri: MutableState<Uri?>) {
 }
 
 
-private fun uploadImage(imageUri: Uri, context: Context) {
+private fun uploadImage(imageUri: Uri, context: Context, lifecycleCoroutineScope: LifecycleCoroutineScope) {
     //Referencia para acesso e manipulação do cloud Storage e firestore
     lateinit var storageRef: StorageReference
     lateinit var fibaseFirestore: FirebaseFirestore
@@ -275,6 +262,28 @@ private fun uploadImage(imageUri: Uri, context: Context) {
 
                     val map = HashMap<String, Any>()
                     map["pic"] = uri.toString()
+
+                    fibaseFirestore.collection("images").add(map)
+
+                    lifecycleCoroutineScope.launch {
+                        val body = JsonObject().apply {
+                            addProperty("login", "oi")
+                            addProperty("senha", "oi")
+                            addProperty("imagem", uri.toString())
+                        }
+
+                        val result =
+
+                        if(result.isSuccessful){
+                            Toast.makeText(
+                                context,
+                                "Usuario cadastrado com sucesso",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }else{
+                            Log.e("erro", "TelaCadastro: ${result.body()}", )
+                        }
+                    }
 
                     fibaseFirestore.collection("images").add(map)
                         .addOnCompleteListener { firestoreTask ->
