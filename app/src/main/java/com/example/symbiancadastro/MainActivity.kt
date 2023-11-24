@@ -1,9 +1,11 @@
 package com.example.symbiancadastro
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -50,6 +52,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.symbiancadastro.ui.theme.SymbianCadastroTheme
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,6 +84,8 @@ fun login(fotoUri: MutableState<Uri?>) {
     var lockState = rememberSaveable {
         mutableStateOf("")
     }
+
+    val contexto = LocalContext.current
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -121,10 +128,6 @@ fun login(fotoUri: MutableState<Uri?>) {
                     fontWeight = FontWeight(400)
                 )
             }
-
-
-
-
 
             Spacer(modifier = Modifier.height(30.dp))
 
@@ -171,7 +174,9 @@ fun login(fotoUri: MutableState<Uri?>) {
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            uploadImage(fotoUri.value!!, contexto )
+                        },
                         colors = ButtonDefaults.buttonColors(Color(150, 6, 240)),
                         modifier = Modifier
                             .width(180.dp)
@@ -252,3 +257,52 @@ fun login(fotoUri: MutableState<Uri?>) {
 }
 
 
+private fun uploadImage(imageUri: Uri, context: Context) {
+    //Referencia para acesso e manipulação do cloud Storage e firestore
+    lateinit var storageRef: StorageReference
+    lateinit var fibaseFirestore: FirebaseFirestore
+    storageRef = FirebaseStorage.getInstance().reference.child("images")
+    fibaseFirestore = FirebaseFirestore.getInstance()
+
+    storageRef = storageRef.child(System.currentTimeMillis().toString())
+
+    imageUri?.let {
+        storageRef.putFile(it).addOnCompleteListener { task ->
+
+            if (task.isSuccessful) {
+
+                storageRef.downloadUrl.addOnSuccessListener { uri ->
+
+                    val map = HashMap<String, Any>()
+                    map["pic"] = uri.toString()
+
+                    fibaseFirestore.collection("images").add(map)
+                        .addOnCompleteListener { firestoreTask ->
+
+                            if (firestoreTask.isSuccessful) {
+                                Toast.makeText(
+                                    context,
+                                    "Upload realizado com sucesso",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Erro ao tentar realizar o upload.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+
+                            }
+
+                        }
+                }
+
+            } else {
+
+                Toast.makeText(context, "Erro ao tentar realizar o upload.", Toast.LENGTH_SHORT).show()
+
+            }
+
+        }
+    }}

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "829276620144",
+    "project_id": "projetosebyam",
+    "storage_bucket": "projetosebyam.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:829276620144:android:a445cb61a28c07a3defbb5",
+        "android_client_info": {
+          "package_name": "br.senai.sp.jandira"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWbOAqY3SFyIqJFhjyedGRRwe7J-KOgs4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:829276620144:android:ce32da5c6eab2424defbb5",
+        "android_client_info": {
+          "package_name": "com.example.symbiancadastro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWbOAqY3SFyIqJFhjyedGRRwe7J-KOgs4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
