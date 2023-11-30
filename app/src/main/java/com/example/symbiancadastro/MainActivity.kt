@@ -60,6 +60,7 @@ import com.google.firebase.storage.StorageReference
 import com.google.gson.JsonObject
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.lifecycleScope
+import com.example.symbiancadastro.services.LoginRepository
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -82,11 +83,11 @@ class MainActivity : ComponentActivity() {
 fun login(fotoUri: MutableState<Uri?>, lifecycleCoroutineScope: LifecycleCoroutineScope) {
 
 
-    var emailState = rememberSaveable {
+    var emailState by remember {
         mutableStateOf("")
     }
 
-    var lockState = rememberSaveable {
+    var lockState by remember {
         mutableStateOf("")
     }
 
@@ -177,8 +178,8 @@ fun login(fotoUri: MutableState<Uri?>, lifecycleCoroutineScope: LifecycleCorouti
                 Spacer(modifier = Modifier.height(23.dp))
 
                 OutlinedTextField(
-                    value = "", onValueChange = {
-                        emailState.value = it
+                    value = emailState, onValueChange = {
+                        emailState = it
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -188,8 +189,8 @@ fun login(fotoUri: MutableState<Uri?>, lifecycleCoroutineScope: LifecycleCorouti
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 OutlinedTextField(
-                    value = "", onValueChange = {
-                        lockState.value = it
+                    value = lockState, onValueChange = {
+                        lockState = it
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -204,7 +205,7 @@ fun login(fotoUri: MutableState<Uri?>, lifecycleCoroutineScope: LifecycleCorouti
                 ) {
                     Button(
                         onClick = {
-                            uploadImage(fotoUri.value!!, contexto , lifecycleCoroutineScope)
+                            uploadImage(fotoUri.value!!, contexto , lifecycleCoroutineScope, emailState, lockState)
                         },
                         colors = ButtonDefaults.buttonColors(Color(150, 6, 240)),
                         modifier = Modifier
@@ -244,10 +245,12 @@ fun login(fotoUri: MutableState<Uri?>, lifecycleCoroutineScope: LifecycleCorouti
 }
 
 
-private fun uploadImage(imageUri: Uri, context: Context, lifecycleCoroutineScope: LifecycleCoroutineScope) {
+private fun uploadImage(imageUri: Uri, context: Context, lifecycleCoroutineScope: LifecycleCoroutineScope, login: String, senha:String) {
     //Referencia para acesso e manipulação do cloud Storage e firestore
     lateinit var storageRef: StorageReference
     lateinit var fibaseFirestore: FirebaseFirestore
+    val loginRepository = LoginRepository()
+
     storageRef = FirebaseStorage.getInstance().reference.child("images")
     fibaseFirestore = FirebaseFirestore.getInstance()
 
@@ -267,12 +270,16 @@ private fun uploadImage(imageUri: Uri, context: Context, lifecycleCoroutineScope
 
                     lifecycleCoroutineScope.launch {
                         val body = JsonObject().apply {
-                            addProperty("login", "oi")
-                            addProperty("senha", "oi")
+                            addProperty("login", login)
+                            addProperty("senha", senha)
                             addProperty("imagem", uri.toString())
                         }
 
-                        val result =
+                        Log.i("bodyTeesteaaa", body.toString())
+
+                        val result = loginRepository.loginUsuario(login, senha, uri.toString())
+
+                        Log.i("resultvamosVer", result.toString())
 
                         if(result.isSuccessful){
                             Toast.makeText(
@@ -281,30 +288,30 @@ private fun uploadImage(imageUri: Uri, context: Context, lifecycleCoroutineScope
                                 Toast.LENGTH_SHORT
                             ).show()
                         }else{
-                            Log.e("erro", "TelaCadastro: ${result.body()}", )
+                            Log.e("erroCadastrar", "TelaCadastro: ${result.body()}", )
                         }
-                    }
 
-                    fibaseFirestore.collection("images").add(map)
-                        .addOnCompleteListener { firestoreTask ->
+                        fibaseFirestore.collection("images").add(map)
+                            .addOnCompleteListener { firestoreTask ->
 
-                            if (firestoreTask.isSuccessful) {
-                                Toast.makeText(
-                                    context,
-                                    "Upload realizado com sucesso",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                if (firestoreTask.isSuccessful) {
+                                    Toast.makeText(
+                                        context,
+                                        "Upload realizado com sucesso",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
 
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "Erro ao tentar realizar o upload.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Erro ao tentar realizar o upload.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                }
 
                             }
-
-                        }
+                    }
                 }
 
             } else {

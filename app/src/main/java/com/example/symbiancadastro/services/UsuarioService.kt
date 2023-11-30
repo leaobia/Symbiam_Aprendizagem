@@ -10,7 +10,7 @@ import retrofit2.http.Query
 
 interface UsuarioService {
 
-    @POST("/usuario/cadastrarUsuario")
+    @POST("usuario/cadastrarUsuario")
     suspend fun postarUsuario(@Body body: JsonObject): Response <JsonObject>
 
 }

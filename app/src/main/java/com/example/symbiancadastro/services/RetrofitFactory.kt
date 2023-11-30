@@ -6,7 +6,7 @@ import retrofit2.create
 
 
 class RetrofitFactory {
-    private val BASE_URL = "http://localhost:3000/"
+    private val BASE_URL = "http://10.107.144.10:3000/"
     private val retrofitFactory = Retrofit
         .Builder()
         .baseUrl(BASE_URL)
